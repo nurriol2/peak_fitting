@@ -1,5 +1,4 @@
 import os
-from select import select
 import numpy as np
 import pandas as pd
 from data_toolbox.allan_func.allan import overlapping_allan_deviation as oadev
