@@ -20,8 +20,8 @@ def _process_ucl_area(dir, filename):
     Load the area data from a .dat file. Then, create a DataFrame its contents.
 
     Args:
-        dir (str): Parent directory of the sideband data.
-        filename (str):  Desired sideband data file. Must be .dat suffix.
+        dir (str): Parent directory of the area data.
+        filename (str):  Desired area data file. Must be .dat suffix.
 
     Returns:
         (pandas.DataFrame):  DataFrame from the contents of a area data file.
@@ -66,8 +66,8 @@ def run_ucl_workflow(dir, filename):
     Estimate the BI, RW, and RRW of the selected parameter.
 
     Args:
-        dir (str): Parent directory of the sideband data.
-        filename (str):  Desired sideband data file. Must be .dat suffix.
+        dir (str): Parent directory of the area data.
+        filename (str):  Desired area data file. Must be .dat suffix.
 
     Returns:
         ([numpy.ndarray, numpy.ndarray, numpy.ndarray]):  A list of the estimated coefficients.
