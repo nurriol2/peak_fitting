@@ -11,6 +11,12 @@ HETERODYNE_RAW = os.path.join(EXPERIMENT_TOP, "heterodyne/")
 # Subdirectory for time series created by UCL experimenters
 UCL_TIME_SERIES = os.path.join(EXPERIMENT_TOP, "ucl_time_series/")
 
+# Callable dictionary of paths through the experiment data directory
+data_loc = {
+    "ucl":UCL_TIME_SERIES,
+    "hetr":HETERODYNE_RAW,
+    "split":SPLIT_DETECTION_RAW
+}
 
 def build_file_tree():
     """
