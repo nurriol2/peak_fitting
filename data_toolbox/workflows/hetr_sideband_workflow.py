@@ -13,13 +13,14 @@ COLUMNS = ["area_x", "freq_x", "linewidth_x", "area_y", "freq_y", "linewidth_y",
 # Heterodyne data was sampled every 326.613 seconds
 SAMPLING_RATE = 1/326.613
 
+
 def _process_ucl_sideband(dir, filename):
     
     """
     Load the sideband data from a .dat file. Then, create a DataFrame its contents.
 
     Args:
-        dir (str): Parent directory of the sideband data
+        dir (str): Parent directory of the sideband data.
         filename (str):  Desired sideband data file. Must be .dat suffix.
 
     Returns:
@@ -38,6 +39,7 @@ def _process_ucl_sideband(dir, filename):
     # Convert sideband data into a DataFrame
     return pd.DataFrame(data=sideband_array, columns=COLUMNS)
 
+
 def _select_column(dir, filename, parameter):
     
     """
@@ -45,6 +47,11 @@ def _select_column(dir, filename, parameter):
 
     Raises:
         Exception: When the supplied parameter is not one of the column names.
+
+    Args:
+        dir (str): Parent directory of the sideband data.
+        filename (str):  Desired sideband data file. Must be .dat suffix.
+        parameter (str): The parameter an Allan deviation is being computed for.    
 
     Returns:
         numpy.ndarray: Column of the DataFrame as an array.
@@ -62,7 +69,21 @@ def _select_column(dir, filename, parameter):
     
     return selected_values.to_numpy()
 
+
 def run_ucl_workflow(dir, filename, parameter):
+    
+    """
+    Specify a column to analyze. Compute the Allan deviation of the selected parameter.
+    Estimate the BI, RW, and RRW of the selected parameter.
+
+    Args:
+        dir (str): Parent directory of the sideband data.
+        filename (str):  Desired sideband data file. Must be .dat suffix.
+        parameter (str): The parameter an Allan deviation is being computed for.
+
+    Returns:
+        _type_: _description_
+    """
     
     # Measured signal of the time series
     signal = _select_column(dir, filename, parameter)
