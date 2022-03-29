@@ -10,9 +10,11 @@ from data_toolbox.allan_func.coefficient_fitting import fit_rate_random_walk_lin
 
 # Column names to use for the DataFrame
 COLUMNS = ["area_x", "freq_x", "linewidth_x", "area_y", "freq_y", "linewidth_y", "residuals"]
+
+# Heterodyne data was sampled every 326.613 seconds
 SAMPLING_RATE = 1/326.613
 
-def _process(dir, filename):
+def _process_ucl_sideband(dir, filename):
     
     """
     Load the sideband data from a .dat file. Then, create a DataFrame its contents.
@@ -54,11 +56,11 @@ def _select_column(dir, filename, parameter):
         raise Exception(f"{parameter} not found in {COLUMNS}.")
     
     
-    df = _process(dir, filename)
+    df = _process_ucl_sideband(dir, filename)
     selected_values = df[parameter]
     return selected_values.to_numpy()
 
-def run_workflow(dir, filename, parameter):
+def run_ucl_workflow(dir, filename, parameter):
     
     # Measured signal of the time series
     signal = _select_column(dir, filename, parameter)
