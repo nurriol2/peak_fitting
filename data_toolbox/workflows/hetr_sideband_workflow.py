@@ -82,7 +82,7 @@ def run_ucl_workflow(dir, filename, parameter):
         parameter (str): The parameter an Allan deviation is being computed for.
 
     Returns:
-        _type_: _description_
+        ([numpy.ndarray, numpy.ndarray, numpy.ndarray]):  A list of the estimated coefficients.
     """
     
     # Measured signal of the time series
