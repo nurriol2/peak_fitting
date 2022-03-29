@@ -56,7 +56,10 @@ def _select_column(dir, filename, parameter):
     
     
     df = _process_ucl_sideband(dir, filename)
+    
+    # Select the columna as a pandas.Series
     selected_values = df[parameter]
+    
     return selected_values.to_numpy()
 
 def run_ucl_workflow(dir, filename, parameter):
