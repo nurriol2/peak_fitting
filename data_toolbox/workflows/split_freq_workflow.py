@@ -85,3 +85,5 @@ def run_ucl_workflow(dir, filename):
     random_walk_coeff = fit_random_walk_line(t, s)
 
     return bias_instability_coeff, rate_random_walk_coeff, random_walk_coeff
+
+# End UCL
