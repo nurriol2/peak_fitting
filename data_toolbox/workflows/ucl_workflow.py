@@ -17,6 +17,11 @@ class UCLWorkflow(Workflow):
 
     def __init__(self):
         self.workflow_type = "UCL"
+        self.area_report = None
+        return 
+
+    def _set_area_report(self, report):
+        self.area_report = report
         return 
 
     # TODO:  Argument validation
@@ -27,14 +32,29 @@ class UCLWorkflow(Workflow):
         # Load the area data into an array
         area_array = np.loadtxt(filepath)
 
-        return area_array
+        return (area_array, filepath)
 
     def split_detection(self, mode):
         
-        # The output values of the area time series
-        area_signal = self._process_area_data(mode)
+        ## Parameter -> Area ##
+        # Area values as the output of a time series in an array
+        # The filepath indicating the source of the data
+        area_signal, filepath = self._process_area_data(mode)
 
         # Compute the ADEV and calculate coeff values
-        self.run_workflow(area_signal, SPLIT_DET_SAMPLING_RATE)
+        area_coeffs = self.run_workflow(area_signal, SPLIT_DET_SAMPLING_RATE)
+
+        # Create a Report targeting area of specified split detection mode
+        area_report = Report(
+            workflow_used=self.workflow_type,
+            data_source=filepath,
+            parameter="area",
+            coefficients=area_coeffs
+        )
+
+        # Update the UCLWorkflow
+        self._set_area_report(area_report)
+
+        ## Parameter -> Frequency ##
 
         return # Want to return a Report or maybe [Report, ..., Report]
