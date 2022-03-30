@@ -1,19 +1,3 @@
-# Workflow used:  "UCL"
-# Data source used:  "areax.dat"
-# Parameter analyzed:  "Area under Lorentzian fit"
-# Coefficient Estimated Values:
-#       Random Walk: NNN.nnn
-#       Bias Instability: NNN.nnn
-#       Rate Random Walk:  NNN.nnn
-
-# Workflow used:  "Custom"
-# Data source used:  "split_detection/cha_st80_N.CSV"
-# Parameter analyzed:  "Area under Lorentzian fit"
-# Coefficient Estimated Values:
-#       Random Walk: NNN.nnn
-#       Bias Instability: NNN.nnn
-#       Rate Random Walk:  NNN.nnn
-
 from dataclasses import dataclass
 
 @dataclass
