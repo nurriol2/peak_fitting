@@ -1,6 +1,6 @@
 from setup import build_file_tree
 from data_toolbox.workflows.ucl_workflow import UCLWorkflow
-#from data_toolbox.workflows.custom_workflow import CustomWorkflow
+from data_toolbox.workflows.custom_workflow import CustomWorkflow
 
 def main():
 
@@ -8,45 +8,39 @@ def main():
     build_file_tree()
 
     ### UCL Analysis ###
-    ucl = UCLWorkflow()
+    
     ## Split Detection Data ##
-    ucl.split_detection(mode='x')
-    ucl_split_areax = ucl.area_report
-    print(ucl_split_areax)
-    
-"""
-    ucl_split_x.freq_report()
-    
-    ucl_split_y = UCLWorkflow.split_detection(mode="y")
-    ucl_split_y.area_report()
-    ucl_split_y.freq_report()
-
+    # Define a workflow object
+    ucl = UCLWorkflow()
+    # Target x mode of the split detection data set
+    ucl.target_split_detection(mode='x')
+    # View the area report
+    #print(ucl.area_report)
+    # View the frequency report
+    #print(ucl.freq_report)
 
     ## Heterodyne Data ##
-    # Run negative sideband data through workflow
-    ucl_neg = UCLWorkflow.hetr_sideband(which_sideband="negative")
-    # Query the workflow for each paremeter
-    ucl_neg.area_report()
-    ucl_neg.freq_report()
-    ucl_neg.line_report()
-
-    # Run positive sideband data through workflow
-    ucl_pos = UCLWorkflow.hetr_sideband(which_sideband="positive")
-    # Call the report to generate
-    ucl_pos.area_report()
-    ucl_pos.freq_report()
-    ucl_pos.line_report()   
-
+    # A new workflow object
+    ucl = UCLWorkflow()
+    # Target the negative sideband of the heterodyne data set
+    ucl.target_heterodyne(which_sideband="neg", mode='x')
+    # View the reports
+    #print(ucl.area_report) 
+    #print(ucl.freq_report) 
+    #print(ucl.line_report) 
+    
     ### Custom Analysis ###
     
     ## Split Detection Data ##
     # "cha" <--> "x" and "chb" <--> "y" throughout
+    cst = CustomWorkflow()
+    # This runs "cha" data
+    cst.target_split_detection(mode='y')
+    print(cst.area_report) 
+    print(cst.freq_report) 
+    print(cst.line_report) 
     
-    # This runs the "cha" data
-    cst_split_x = CustomWorkflow.split_detection(mode="x")
-    cst_split_x.area_report()
-    cst_split_x.freq_report()
-    cst_split_x.line_report()
+"""
 
     # Whereas, this runs the "chb" data
     cst_split_y = CustomWorkflow.split_detection(mode="y")
