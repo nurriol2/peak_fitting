@@ -18,28 +18,32 @@ class UCLWorkflow(Workflow):
     def __init__(self):
         self.workflow_type = "UCL"
         self.area_report = None
+        self.freq_report = None
         return 
 
     def _set_area_report(self, report):
         self.area_report = report
         return 
+    
+    def _set_freq_report(self, report):
+        self.freq_report = report
+        return 
 
     # TODO:  Argument validation
-    def _process_area_data(self, mode):
-        # Use mode to specify the area data to access
-        filepath = AREA_PATH_TEMPLATE.format(mode)
+    def _process_data(self, filepath_template, mode):
+        # Specify the data to access
+        data_source = filepath_template.format(mode)
 
-        # Load the area data into an array
-        area_array = np.loadtxt(filepath)
+        # The data serves as the output signal of a time series
+        # Load the signal into an array
+        signal_array = np.loadtxt(data_source)
 
-        return (area_array, filepath)
-
-    def split_detection(self, mode):
+        return (signal_array, data_source)
+    
+    def target_split_detection(self, mode):
         
         ## Parameter -> Area ##
-        # Area values as the output of a time series in an array
-        # The filepath indicating the source of the data
-        area_signal, filepath = self._process_area_data(mode)
+        area_signal, area_source = self._process_data(AREA_PATH_TEMPLATE, mode)
 
         # Compute the ADEV and calculate coeff values
         area_coeffs = self.run_workflow(area_signal, SPLIT_DET_SAMPLING_RATE)
@@ -47,12 +51,12 @@ class UCLWorkflow(Workflow):
         # Create a Report targeting area of specified split detection mode
         area_report = Report(
             workflow_used=self.workflow_type,
-            data_source=filepath,
-            parameter="area",
+            data_source=area_source,
+            parameter="Area under Lorentzian fit",
             coefficients=area_coeffs
         )
 
-        # Update the UCLWorkflow
+        # Update the UCLWorkflow with area report
         self._set_area_report(area_report)
 
         ## Parameter -> Frequency ##
