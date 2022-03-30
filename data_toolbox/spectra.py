@@ -114,9 +114,9 @@ class SpectrumFile:
 
 
 @dataclass
-class SplitBandData(SpectrumFile):
+class SplitDetectionData(SpectrumFile):
     """
-    Class for working with split band data.
+    Class for working with split detection data.
     Example:  `cha_st80_1.CSV`
     """
 
@@ -158,7 +158,7 @@ class SplitBandData(SpectrumFile):
 
         return Lorentzian(self.frequencies, *optimal_params)
 
-# End SplitBandData
+# End SplitDetectionData
 
 
 
