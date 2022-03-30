@@ -12,7 +12,7 @@ HETERODYNE_RAW = os.path.join(EXPERIMENT_TOP, "heterodyne/")
 UCL_TIME_SERIES = os.path.join(EXPERIMENT_TOP, "ucl_time_series/")
 
 # Callable dictionary of paths through the experiment data directory
-data_loc = {
+PATHS = {
     "ucl":UCL_TIME_SERIES,
     "hetr":HETERODYNE_RAW,
     "split":SPLIT_DETECTION_RAW
