@@ -45,31 +45,42 @@ class CustomWorkflow(Workflow):
     # TODO:  Programatically determine nFiles
     def target_split_detection(self, mode, nFiles=124):
 
+        # Translate the mode into the corresponding filename template
         file_map = {
             'x':CHA_ST80_TEMPLATE,
             'y':CHB_ST80_TEMPLATE
         }
         
+        # Set the filename template
         file_template = file_map[mode]
 
+        # Accumulate a list of Lorentzian objects
         lorentzians = []
+        # Loop over each of the CSV data files
         for i in range(1, nFiles+1):
             split_det_file = SplitDetectionData(SPLIT_DETECTION_RAW, file_template.format(i), SPLIT_DET_UNITS)
+            # SplitDetectionData have a single peak Lorentzian profile
+            # Fit a single peak Lorentzian to the data and add it to the list
             lorentzians.append(split_det_file.init_lorentzian())
-        lorentzians = np.array(lorentzians)
         
+        # Each Lorentzian object carries one element from each of the 3 time series
+        # Map between the time series order and the `parameter` it corresponds to
         parameter_map = {
             0:"Area under Lorentzian fit (Mode:  {})",
             1:"Mechanical frequency (Mode:  {})",
             2:"Line width; FWHM of Lorentzian fit (Mode:  {})"
         }
 
+        # Enumerate the time series
         for key, signal in enumerate(self._build_time_series(lorentzians)):
+            # Set up `Report` attributes
             workflow_used = self.workflow_type
             data_source = os.path.join(SPLIT_DETECTION_RAW, file_template)
             parameter = parameter_map[key].format(mode)
+            # Actually calcualte the ADEV and coefficients here
             coefficients = self._run_workflow(signal, SPLIT_DET_SAMPLING_RATE)
 
+            # Generate a `Report` with the appropriate `parameter`
             if key == 0:
                 report = Report(
                     workflow_used = workflow_used,
@@ -96,5 +107,9 @@ class CustomWorkflow(Workflow):
                     coefficients = coefficients
                 )
                 self._set_line_report(report)
+
+        return 
+
+    def target_heterodyne(self, which_sideband):
 
         return 
