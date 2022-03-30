@@ -1,8 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-from data_toolbox.workflows import workflow
-from setup import UCL_TIME_SERIES
+from setup import UCL_TIME_SERIES, HETR_SAMPLING_RATE, SPLIT_DET_SAMPLING_RATE
 from data_toolbox.report import Report
 from data_toolbox.workflows.workflow import Workflow 
 
@@ -153,9 +152,6 @@ class UCLWorkflow(Workflow):
             mode (str): Directional mode of the data. Either 'x' or 'y'.
         """ 
 
-        # Split detection data is sampled every 772.26 seconds
-        SPLIT_DET_SAMPLING_RATE = 1/772.26
-
         ## Parameter -> Area ##
         # Specify the split detection mode and the source of the data
         area_signal, area_source = self._process_split_vec(AREA_PATH_TEMPLATE, mode)
@@ -202,9 +198,6 @@ class UCLWorkflow(Workflow):
             which_sideband (str): Sideband to analyze. Either "neg" or "pos".
             mode (str): Directional mode of the data. Either 'x' or 'y'.
         """
-    
-        # Heterodyne data was sampled every 326.613 seconds
-        HETR_SAMPLING_RATE = 1/326.613
 
         # Templates for the possible column names found in the DataFrame
         PARAMETER_TEMPLATES = ["area_{}", "freq_{}", "linewidth_{}"]
