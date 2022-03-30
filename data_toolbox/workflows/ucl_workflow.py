@@ -7,6 +7,7 @@ from data_toolbox.report import Report
 from data_toolbox.workflows.workflow import Workflow 
 
 
+
 # All UCLWorkflows navigate to these files to process their data
 AREA_PATH_TEMPLATE = os.path.join(UCL_TIME_SERIES, "area{}.dat")
 FREQ_PATH_TEMPLATE = os.path.join(UCL_TIME_SERIES, "f{}.dat")
@@ -14,12 +15,15 @@ SIDEBAND_PATH_TEMPLATE = os.path.join(UCL_TIME_SERIES, "fit_{}_sideband.dat")
 
 # Sideband fit data contains the first six entries as column names
 # The 7th entry is assumed to be an error/residuals column
-# (Source:  UCL Data README)
 HETR_COLUMNS = ["area_x", "freq_x", "linewidth_x", "area_y", "freq_y", "linewidth_y", "residuals"]
 
 
 
 class UCLWorkflow(Workflow):
+    """
+    Subclass to extract Allan deviation noise coefficients using the fit data already obtained by UCL researchers.
+    `UCLWorkflow` inherits from `Workflow` class.
+    """
 
     def __init__(self):
         super().__init__()
@@ -29,6 +33,19 @@ class UCLWorkflow(Workflow):
 
     # TODO:  Argument validation
     def _process_split_vec(self, filepath_template, mode):
+
+        """
+        Load a 1-dimensional vector into an array. 
+        Report the source of this data.
+
+        Args:
+            filepath_template (str): Full path leading to the source of the data.
+            mode (str): Directional mode of the data. Either 'x' or 'y'.
+
+        Returns:
+            numpy.ndarray: The contents of the vector as an array.
+        """
+
         # Specify the split detection data to access
         data_source = filepath_template.format(mode)
 
@@ -39,7 +56,17 @@ class UCLWorkflow(Workflow):
         return (signal_array, data_source)
 
     def _process_hetr(self, filepath_template, which_sideband):
+        
+        """
+        Load a multi-dimensional array as a DataFrame with specified column names.
 
+        Args:
+            filepath_template (str): Full path leading to the source of the data.
+            which_sideband (str): Key that specifies which sideband fit data to use.
+
+        Returns:
+            pandas.DataFrame: The contents of heterodyne data as a DataFrame.
+        """
 
         # Specify the sideband data to access
         data_source = filepath_template.format(which_sideband)
@@ -51,7 +78,21 @@ class UCLWorkflow(Workflow):
 
         return hetr_df
 
+
     def _select_hetr_column(self, hetr_df, col_name):
+        """
+        Select a single column of a DataFrame and return it as an array.
+
+        Args:
+            hetr_df (pandas.DataFrame): The contents of heterodyne data as a DataFrame.
+            col_name (str): The column name used to select a column from the DataFrame.
+
+        Raises:
+            Exception: If the provided column name is not a column of the DataFrame.
+
+        Returns:
+            numpy.ndarray: The specified DataFrame column as an array.
+        """
         
         # Check that the selection is a valid column name
         valid_col_names = list(hetr_df.columns)
@@ -68,13 +109,21 @@ class UCLWorkflow(Workflow):
 
 
     def _cols2params(self):
+        """
+        Create a dict to progromatically assign `parameter` based on the column name.
+
+        Returns:
+            dict: Keys are potential column names for heterodyne data. Values are `parameter` strings used for `Report`s
+        """
         
+        # Start with the keys and values reversed from desired format
         parameters = {
             "Area under Lorentzian fit (Mode:  {})": [],
             "Mechanical frequency (Mode:  {})": [],
             "Line width; FWHM of Lorentzian fit (Mode:  {})": []
         }
 
+        # Add column names to corresponding value based on their contents
         for col in HETR_COLUMNS:
             if "area" in col.lower():
                 parameters["Area under Lorentzian fit (Mode:  {})"].append(col)
@@ -83,14 +132,26 @@ class UCLWorkflow(Workflow):
             if "linewidth" in col.lower():
                 parameters["Line width; FWHM of Lorentzian fit (Mode:  {})"].append(col)
         
+        # The dictionary to be returned
         reverse = {}
+        # Reverse the dictionary that was just populated
         for k, v in parameters.items():
+            # Unpack the list of colum names
             for value in v:
+                # Use the colum names as keys and `parameter`s as values
                 reverse[value] = k
 
         return reverse
 
+
     def target_split_detection(self, mode):
+
+        """
+        Automate `Report` generation for all split detection data `parameter`s in the given mode.
+
+        Args:
+            mode (str): Directional mode of the data. Either 'x' or 'y'.
+        """ 
 
         # Split detection data is sampled every 772.26 seconds
         SPLIT_DET_SAMPLING_RATE = 1/772.26
@@ -132,21 +193,39 @@ class UCLWorkflow(Workflow):
         return
 
     def target_heterodyne(self, which_sideband, mode):
+        """
+        Automate `Report` generation for all heterodyne data `parameter`s in the specified mode.
+        Since heterodyne data is multi-dimensional, processing depends on the colum names found
+        in the DataFrame.
+
+        Args:
+            which_sideband (str): Sideband to analyze. Either "neg" or "pos".
+            mode (str): Directional mode of the data. Either 'x' or 'y'.
+        """
     
         # Heterodyne data was sampled every 326.613 seconds
         HETR_SAMPLING_RATE = 1/326.613
 
+        # Templates for the possible column names found in the DataFrame
         PARAMETER_TEMPLATES = ["area_{}", "freq_{}", "linewidth_{}"]
+        # Use the specified mode to format the `parameter`s
         col_names = [s.format(mode) for s in PARAMETER_TEMPLATES]
 
+        # Create a DataFrame from the heterodyne data
+        # Specify which sideband to use
         hetr_df = self._process_hetr(SIDEBAND_PATH_TEMPLATE, which_sideband)
+        # Loop through the specified column names
         for col_name in col_names:
-            print(f"COLUMN NAME {col_name}")
+            # Source of heterodyne sideband fit data
             source = SIDEBAND_PATH_TEMPLATE.format(which_sideband)
+            # Area, frequency, or linewidth signal as a time series
             signal = self._select_hetr_column(hetr_df, col_name)
+            # Compute coefficients from the Allan deviation
             coeffs = self._run_workflow(signal, HETR_SAMPLING_RATE)
+            # Look up what the `parameter` should be 
             parameter = self._cols2params()[col_name].format(mode)
 
+            # Generate a `Report` to package all the information
             report = Report(
                 workflow_used = self.workflow_type,
                 data_source = source,
@@ -154,6 +233,7 @@ class UCLWorkflow(Workflow):
                 coefficients = coeffs
             )
 
+            # Update the `UCLWorkflow` according to which `parameter` was just analyzed
             if "area" in col_name:
                 self._set_area_report(report)
             if "freq" in col_name:

@@ -6,6 +6,10 @@ from data_toolbox.allan_func.coefficient_fitting import fit_random_walk_line
 
 
 class Workflow:
+    """
+    Base class for executing Allan deviation noise coefficient analyses. 
+    """
+
 
     def __init__(self):
         self.area_report = None
