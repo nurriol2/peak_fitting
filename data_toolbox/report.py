@@ -2,6 +2,9 @@ from dataclasses import dataclass
 
 @dataclass
 class Report:
+    """
+    Class for neatly reporting the results of a `Workflow`.
+    """
 
     workflow_used: str
     data_source: str
