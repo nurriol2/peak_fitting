@@ -11,6 +11,11 @@ HETERODYNE_RAW = os.path.join(EXPERIMENT_TOP, "heterodyne/")
 # Subdirectory for time series created by UCL experimenters
 UCL_TIME_SERIES = os.path.join(EXPERIMENT_TOP, "ucl_time_series/")
 
+# Split detection data is sampled every 772.26 seconds
+SPLIT_DET_SAMPLING_RATE = 1/772.26
+# Heterodyne data was sampled every 326.613 seconds
+HETR_SAMPLING_RATE = 1/326.613
+
 # Callable dictionary of paths through the experiment data directory
 PATHS = {
     "ucl":UCL_TIME_SERIES,
