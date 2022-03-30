@@ -14,6 +14,7 @@ class Workflow:
         return 
 
 
+    # Setters for updating individual Reports
     def _set_area_report(self, report):
         self.area_report = report
         return 
@@ -28,6 +29,19 @@ class Workflow:
         
 
     def _run_workflow(self, signal, sampling_rate):
+        """
+        Method to automate the following procedure:
+        1. Compute the Allan deviation
+        2. Compute noise coefficients from Allan deviation
+        3. Return noise coefficients
+
+        Args:
+            signal (numpy.ndarray): The data analyzed with the Allan deviation.
+            sampling_rate (float): The sampling rate `signal` was collected in Hertz.
+
+        Returns:
+            dict: Keys are the names of noise sources. Values are the computed coefficients.
+        """
         # Compute the Allan deviation
         tau, sigma = oadev(signal, sampling_rate)
 
