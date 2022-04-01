@@ -8,14 +8,14 @@ class Report:
 
     workflow_used: str
     data_source: str
-    parameter: str
+    feature: str
     coefficients: dict
 
     def __str__(self):
         printable_str = f"""
                         Workflow used:  {self.workflow_used}
                         Data source:  {self.data_source}
-                        Parameter analyzed:  {self.parameter}
+                        Feature analyzed:  {self.feature}
                         Coefficient Estimated Values:
                               Random Walk: {self.coefficients["Random Walk"]}
                               Bias Instability: {self.coefficients["Bias Instability"]}

@@ -42,8 +42,8 @@ class CustomWorkflow(Workflow):
     def _generate_multiple_reports(self, lorentzians, dir, templ, flag, sampling_rate):
         
         # Each Lorentzian object carries one element from each of the 3 time series
-        # Map between the time series order and the `parameter` it corresponds to
-        parameter_map = {
+        # Map between the time series order and the `feature` it corresponds to
+        feature_map = {
             0:"Area under Lorentzian fit (Mode:  {})",
             1:"Mechanical frequency (Mode:  {})",
             2:"Line width; FWHM of Lorentzian fit (Mode:  {})"
@@ -54,16 +54,16 @@ class CustomWorkflow(Workflow):
             # Set up `Report` attributes
             workflow_used = self.workflow_type
             data_source = os.path.join(dir, templ)
-            parameter = parameter_map[key].format(flag)
+            feature = feature_map[key].format(flag)
             # Actually calcualte the ADEV and coefficients here
             coefficients = self._run_workflow(signal, sampling_rate)
 
-            # Generate a `Report` with the appropriate `parameter`
+            # Generate a `Report` with the appropriate `feature`
             if key == 0:
                 report = Report(
                     workflow_used = workflow_used,
                     data_source = data_source,
-                    parameter = parameter,
+                    feature = feature,
                     coefficients = coefficients
                 )
                 self._set_area_report(report)
@@ -72,7 +72,7 @@ class CustomWorkflow(Workflow):
                 report = Report(
                     workflow_used = workflow_used,
                     data_source = data_source,
-                    parameter = parameter,
+                    feature = feature,
                     coefficients = coefficients
                 )
                 self._set_freq_report(report)
@@ -81,7 +81,7 @@ class CustomWorkflow(Workflow):
                 report = Report(
                     workflow_used = workflow_used,
                     data_source = data_source,
-                    parameter = parameter,
+                    feature = feature,
                     coefficients = coefficients
                 )
                 self._set_line_report(report)
@@ -110,8 +110,8 @@ class CustomWorkflow(Workflow):
 
         self._generate_multiple_reports(lorentzians, SPLIT_DETECTION_RAW, file_template, mode, SPLIT_DET_SAMPLING_RATE)
         # # Each Lorentzian object carries one element from each of the 3 time series
-        # # Map between the time series order and the `parameter` it corresponds to
-        # parameter_map = {
+        # # Map between the time series order and the `feature` it corresponds to
+        # feature_map = {
         #     0:"Area under Lorentzian fit (Mode:  {})",
         #     1:"Mechanical frequency (Mode:  {})",
         #     2:"Line width; FWHM of Lorentzian fit (Mode:  {})"
@@ -122,16 +122,16 @@ class CustomWorkflow(Workflow):
         #     # Set up `Report` attributes
         #     workflow_used = self.workflow_type
         #     data_source = os.path.join(SPLIT_DETECTION_RAW, file_template)
-        #     parameter = parameter_map[key].format(mode)
+        #     feature = feature_map[key].format(mode)
         #     # Actually calcualte the ADEV and coefficients here
         #     coefficients = self._run_workflow(signal, SPLIT_DET_SAMPLING_RATE)
 
-        #     # Generate a `Report` with the appropriate `parameter`
+        #     # Generate a `Report` with the appropriate `feature`
         #     if key == 0:
         #         report = Report(
         #             workflow_used = workflow_used,
         #             data_source = data_source,
-        #             parameter = parameter,
+        #             feature = feature,
         #             coefficients = coefficients
         #         )
         #         self._set_area_report(report)
@@ -140,7 +140,7 @@ class CustomWorkflow(Workflow):
         #         report = Report(
         #             workflow_used = workflow_used,
         #             data_source = data_source,
-        #             parameter = parameter,
+        #             feature = feature,
         #             coefficients = coefficients
         #         )
         #         self._set_freq_report(report)
@@ -149,7 +149,7 @@ class CustomWorkflow(Workflow):
         #         report = Report(
         #             workflow_used = workflow_used,
         #             data_source = data_source,
-        #             parameter = parameter,
+        #             feature = feature,
         #             coefficients = coefficients
         #         )
         #         self._set_line_report(report)

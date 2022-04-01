@@ -109,14 +109,14 @@ class UCLWorkflow(Workflow):
 
     def _cols2params(self):
         """
-        Create a dict to progromatically assign `parameter` based on the column name.
+        Create a dict to progromatically assign `feature` based on the column name.
 
         Returns:
-            dict: Keys are potential column names for heterodyne data. Values are `parameter` strings used for `Report`s
+            dict: Keys are potential column names for heterodyne data. Values are `feature` strings used for `Report`s
         """
         
         # Start with the keys and values reversed from desired format
-        parameters = {
+        features = {
             "Area under Lorentzian fit (Mode:  {})": [],
             "Mechanical frequency (Mode:  {})": [],
             "Line width; FWHM of Lorentzian fit (Mode:  {})": []
@@ -125,19 +125,19 @@ class UCLWorkflow(Workflow):
         # Add column names to corresponding value based on their contents
         for col in HETR_COLUMNS:
             if "area" in col.lower():
-                parameters["Area under Lorentzian fit (Mode:  {})"].append(col)
+                features["Area under Lorentzian fit (Mode:  {})"].append(col)
             if "freq_" in col.lower():
-                parameters["Mechanical frequency (Mode:  {})"].append(col)
+                features["Mechanical frequency (Mode:  {})"].append(col)
             if "linewidth" in col.lower():
-                parameters["Line width; FWHM of Lorentzian fit (Mode:  {})"].append(col)
+                features["Line width; FWHM of Lorentzian fit (Mode:  {})"].append(col)
         
         # The dictionary to be returned
         reverse = {}
         # Reverse the dictionary that was just populated
-        for k, v in parameters.items():
+        for k, v in features.items():
             # Unpack the list of colum names
             for value in v:
-                # Use the colum names as keys and `parameter`s as values
+                # Use the colum names as keys and `feature`s as values
                 reverse[value] = k
 
         return reverse
@@ -146,13 +146,13 @@ class UCLWorkflow(Workflow):
     def target_split_detection(self, mode):
 
         """
-        Automate `Report` generation for all split detection data `parameter`s in the given mode.
+        Automate `Report` generation for all split detection data `feature`s in the given mode.
 
         Args:
             mode (str): Directional mode of the data. Either 'x' or 'y'.
         """ 
 
-        ## Parameter -> Area ##
+        ## feature -> Area ##
         # Specify the split detection mode and the source of the data
         area_signal, area_source = self._process_split_vec(AREA_PATH_TEMPLATE, mode)
         # Compute the ADEV and calculate its coefficients
@@ -161,11 +161,11 @@ class UCLWorkflow(Workflow):
         area_report = Report(
             workflow_used = self.workflow_type,
             data_source = area_source,
-            parameter = f"Area under Lorentzian fit (Mode:  {mode})",
+            feature = f"Area under Lorentzian fit (Mode:  {mode})",
             coefficients = area_coeffs
         )
 
-        ## Parameter -> Frequency ##
+        ## feature -> Frequency ##
         # Specify the split detection mode and the source of the data
         freq_signal, freq_source = self._process_split_vec(FREQ_PATH_TEMPLATE, mode)
         # Compute the ADEV and calculate its coefficients
@@ -174,11 +174,11 @@ class UCLWorkflow(Workflow):
         freq_report = Report(
             workflow_used = self.workflow_type,
             data_source = freq_source,
-            parameter = f"Mechanical frequency (Mode:  {mode})",
+            feature = f"Mechanical frequency (Mode:  {mode})",
             coefficients = freq_coeffs
         )
 
-        ## Parameter -> Linewidth ##
+        ## feature -> Linewidth ##
         # Linewidth was not calculated in the data gathered by A & H
         # TODO:  Add linewidth analysis
 
@@ -190,7 +190,7 @@ class UCLWorkflow(Workflow):
 
     def target_heterodyne(self, which_sideband, mode):
         """
-        Automate `Report` generation for all heterodyne data `parameter`s in the specified mode.
+        Automate `Report` generation for all heterodyne data `feature`s in the specified mode.
         Since heterodyne data is multi-dimensional, processing depends on the colum names found
         in the DataFrame.
 
@@ -200,9 +200,9 @@ class UCLWorkflow(Workflow):
         """
 
         # Templates for the possible column names found in the DataFrame
-        PARAMETER_TEMPLATES = ["area_{}", "freq_{}", "linewidth_{}"]
-        # Use the specified mode to format the `parameter`s
-        col_names = [s.format(mode) for s in PARAMETER_TEMPLATES]
+        feature_TEMPLATES = ["area_{}", "freq_{}", "linewidth_{}"]
+        # Use the specified mode to format the `feature`s
+        col_names = [s.format(mode) for s in feature_TEMPLATES]
 
         # Create a DataFrame from the heterodyne data
         # Specify which sideband to use
@@ -215,18 +215,18 @@ class UCLWorkflow(Workflow):
             signal = self._select_hetr_column(hetr_df, col_name)
             # Compute coefficients from the Allan deviation
             coeffs = self._run_workflow(signal, HETR_SAMPLING_RATE)
-            # Look up what the `parameter` should be 
-            parameter = self._cols2params()[col_name].format(mode)
+            # Look up what the `feature` should be 
+            feature = self._cols2params()[col_name].format(mode)
 
             # Generate a `Report` to package all the information
             report = Report(
                 workflow_used = self.workflow_type,
                 data_source = source,
-                parameter = parameter,
+                feature = feature,
                 coefficients = coeffs
             )
 
-            # Update the `UCLWorkflow` according to which `parameter` was just analyzed
+            # Update the `UCLWorkflow` according to which `feature` was just analyzed
             if "area" in col_name:
                 self._set_area_report(report)
             if "freq" in col_name:
