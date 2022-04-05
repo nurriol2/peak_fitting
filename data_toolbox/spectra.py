@@ -1,4 +1,3 @@
-from audioop import reverse
 import os
 import scipy
 import pandas as pd
@@ -238,6 +237,52 @@ class HeterodyneData(SpectrumFile):
 
         return partition
 
+    def _choose_peak(self, which_sideband, mode):
+        
+        """
+        Determine which peak to fit according to the sideband and directional mode.
+        This method assumes the spectrum has already been trimmed to focus on a
+        sideband. 
+
+        Example:
+
+        # Create the SpectrumFile object
+        hetr = HeterodyneData(...)
+        # Trim the data to focus on the negative sideband
+        hetr.trim_spectrum_to_sideband("neg", 200, -1_000)
+        # Locate the y-directional mode peak
+        y_mode = hetr._choose_peak("neg", 'y')
+
+
+        Returns:
+            int: The index of the desired peak.
+        """
+
+        # Find peaks in the sideband
+        peak_idxs, _ = find_peaks(self.spectrum)
+        # Widths of the found peaks
+        wids = peak_widths(self.spectrum, peak_idxs)[0]
+        # Sort the found peaks according to widths in descending order
+        sorted_wids = list(zip(wids, peak_idxs))
+        sorted_wids.sort(key = lambda pair: pair[0], reverse=True)
+        # Assume the two widest peaks in this sideband are the peaks to fit
+        target_peaks = sorted_wids[0:2]
+        idx_a, idx_b = [p[1] for p in target_peaks]
+     
+        # Determine the peak to fit according to chosen sideband and the directional mode     
+        peak_idx = None
+        if (which_sideband == "pos") and (mode == 'x'):
+            peak_idx = min(idx_a, idx_b)
+        elif (which_sideband == "pos") and (mode == 'y'):
+            peak_idx = max(idx_a, idx_b)
+        elif (which_sideband == "neg") and (mode == 'x'):
+            peak_idx = max(idx_a, idx_b)
+        elif (which_sideband == "neg") and (mode == 'y'):
+            peak_idx = min(idx_a, idx_b)
+
+        return peak_idx
+
+
     def trim_spectrum_to_sideband(self, which_sideband, tune_start=0, tune_end=0):
         """
         Adjust the estimated start and ending indices of the sideband.
@@ -269,23 +314,7 @@ class HeterodyneData(SpectrumFile):
 
         return
 
-    def fit_peak_choice(self, which_sideband, mode):
 
-        # Find peaks in the sideband
-        peak_idxs, _ = find_peaks(self.spectrum)
-        # Widths of the found peaks
-        wids = peak_widths(self.spectrum, peak_idxs)[0]
-        # Sort the found peaks according to widths in descending order
-        sorted_wids = list(zip(wids, peak_idxs))
-        sorted_wids.sort(key = lambda pair: pair[0], reverse=True)
-        # Assume the two widest peaks in this sideband are the peaks to fit
-        peak_a, peak_b = sorted_wids[0:2]
-
-        # Determine the peak to fit according to chosen sideband and the directional mode 
-        # TODO
-
-
-        return (peak_a, peak_b)
 
       
 
