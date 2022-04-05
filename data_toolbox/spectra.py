@@ -237,6 +237,36 @@ class HeterodyneData(SpectrumFile):
 
         return partition
 
+    def trim_spectrum_to_sideband(self, which_sideband, tune_start=0, tune_end=0):
+        """
+        Adjust the estimated start and ending indices of the sideband.
+        Trim the full spectrum so that only the selected sideband remains.
+
+
+        Args:
+            which_sideband (str): The sideband to select. 
+                                  Either "pos" for the region right of the center peak or
+                                  "neg" for the region left of the center peak.
+            tune_start (int, optional): The number of indices to adjust the starting index. 
+                                        Defaults to 0.
+            tune_end (int, optional): The number of indices to adjust the ending index. 
+                                      Defaults to 0.
+        """
+
+        # Get the pos/neg sideband ranges
+        partition = self._find_partition_range()
+        # Choose indices for desired sideband
+        start_idx, end_idx = partition[which_sideband]
+        # Tune the indices
+        start_idx += tune_start
+        end_idx += tune_end
+        # Translate indices to frequency
+        low = self.frequencies[start_idx]
+        high = self.frequencies[end_idx]
+        # Trim the data starting and ending at the specified frequencies
+        self.trim_data(low=low, high=high)
+
+        return 
 
       
 
