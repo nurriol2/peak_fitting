@@ -112,18 +112,23 @@ class CustomWorkflow(Workflow):
 
         return 
 
-    # TODO:  Validate which_sideband
+
     def target_heterodyne(self, which_sideband, nFiles=124):
 
         lorentzians = []
         for i in range(1, nFiles+1):
+            # Create a HeterodyneData object for each file in the directory
             hetr_file = HeterodyneData(HETERODYNE_RAW, HET_ST80_TEMPLATE.format(i), HETR_UNITS)
             
-            
+            # Positive sideband - Larger frequency than main peak
             if which_sideband == "pos":
                 lorentzians.append(hetr_file.fit_right_peak())
-            else:
+            # Negative sideband - Smaller frequency than main peak
+            if which_sideband == "neg":
                 lorentzians.append(hetr_file.fit_left_peak())
+            # Selected sideband is not an option
+            else:
+                raise ValueError(f"`{which_sideband}` is not a sideband. Must be 'pos' or 'neg'.")
             
         self._generate_multiple_reports(lorentzians, HETERODYNE_RAW, HET_ST80_TEMPLATE, which_sideband, HETR_SAMPLING_RATE)
 
