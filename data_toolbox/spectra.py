@@ -173,6 +173,15 @@ class HeterodyneData(SpectrumFile):
     """  
 
     def _assign_left_and_right(self, tall_to_short):
+        """
+        Calculate the index of the prominent side peaks
+
+        Args:
+            tall_to_short (list(tuple)): List of (amplitude, index) pairs sorted by amplitude in descending order.
+
+        Returns:
+            tuple(int, int): The index of the left and right prominent peaks, respectively.
+        """
 
         # Assume the center peak is the tallest peak
         _, center_idx = tall_to_short[0]
@@ -187,7 +196,20 @@ class HeterodyneData(SpectrumFile):
 
         return (left_idx, right_idx)
 
-    def _partition_spectrum(self):
+    def _find_partition_range(self):
+
+        """
+        Determine the range of indices that can be used to partition the spectrum
+        into 2 regions. One region for the positive sideband and another for the
+        negative sideband.
+
+        It's suggested that the resulting ranges are "tuned" before trimming.
+
+        Returns:
+            dict: Dictionary containing ranges for each sideband. 
+                  Each range is given as a tuple; (start index, end index)
+                  Keys:  "pos", "neg".
+        """
 
         # Starting index of the negative sideband
         START = 0
