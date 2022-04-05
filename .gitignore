@@ -1,5 +1,5 @@
 # Ignore main for now
-main.py
+/main.py
 
 # Work with the data locally, but do not track it with git
 experiment_data/
