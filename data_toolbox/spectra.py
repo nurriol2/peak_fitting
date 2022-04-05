@@ -255,7 +255,7 @@ class HeterodyneData(SpectrumFile):
 
 
         Returns:
-            int: The index of the desired peak.
+            tuple(): The (width, index) pair of the desired peak.
         """
 
         # Find peaks in the sideband
@@ -267,21 +267,24 @@ class HeterodyneData(SpectrumFile):
         sorted_wids.sort(key = lambda pair: pair[0], reverse=True)
         # Assume the two widest peaks in this sideband are the peaks to fit
         target_peaks = sorted_wids[0:2]
+
+        # Look up a peak pair from its index
+        idx2peak = {pair[1]:pair for pair in target_peaks}
+
+        # Candidate indices
         idx_a, idx_b = [p[1] for p in target_peaks]
-     
         # Determine the peak to fit according to chosen sideband and the directional mode     
-        peak_idx = None
+        chosen_peak = None
         if (which_sideband == "pos") and (mode == 'x'):
-            peak_idx = min(idx_a, idx_b)
+            chosen_peak = idx2peak[min(idx_a, idx_b)]
         elif (which_sideband == "pos") and (mode == 'y'):
-            peak_idx = max(idx_a, idx_b)
+            chosen_peak = idx2peak[max(idx_a, idx_b)]
         elif (which_sideband == "neg") and (mode == 'x'):
-            peak_idx = max(idx_a, idx_b)
+            chosen_peak = idx2peak[max(idx_a, idx_b)]
         elif (which_sideband == "neg") and (mode == 'y'):
-            peak_idx = min(idx_a, idx_b)
+            chosen_peak = idx2peak[min(idx_a, idx_b)]
 
-        return peak_idx
-
+        return chosen_peak
 
     def trim_spectrum_to_sideband(self, which_sideband, tune_start=0, tune_end=0):
         """
@@ -314,6 +317,33 @@ class HeterodyneData(SpectrumFile):
 
         return
 
+    def fit_lorentzian(self, which_sideband, mode):
+
+        # Choose a peak to fit
+        peak_wid, peak_idx = self._choose_peak(which_sideband, mode)
+
+        # Initialize the guess for Lorentzian
+        guess = [
+            self.spectrum[peak_idx],
+            self.frequencies[peak_idx],
+            peak_wid,
+            self.spectrum.min()
+        ]
+
+        # Define 1D Lorentzian to use with curve_fit
+        def _1Lorentzian(x, amp, cen, wid, back):
+            return (amp*wid**2/((x-cen)**2+wid**2))+back
+
+        # Fit Lorentzian 
+        optimal_parameters, _ = scipy.optimize.curve_fit(_1Lorentzian,
+                                                           self.frequencies,
+                                                           self.spectrum,
+                                                           p0=guess,
+                                                           maxfev=5000)
+
+        result_lorentzian = Lorentzian(self.frequencies, *optimal_parameters)
+
+        return result_lorentzian
 
 
       
