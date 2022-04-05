@@ -319,6 +319,14 @@ class HeterodyneData(SpectrumFile):
 
     def fit_lorentzian(self, which_sideband, mode):
 
+        """
+        Fit a 1-D Lorentzian to the peak in the chosen sideband.
+        Choose the peak depending on the directional mode.
+
+        Returns:
+            Lorentzian: Single peak Lorentzian, fit to the selected peak.
+        """
+
         # Choose a peak to fit
         peak_wid, peak_idx = self._choose_peak(which_sideband, mode)
 

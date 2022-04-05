@@ -113,23 +113,29 @@ class CustomWorkflow(Workflow):
         return 
 
 
-    def target_heterodyne(self, which_sideband, nFiles=124):
+    def target_heterodyne(self, which_sideband, mode, nFiles=124):
+
+        # Hueristics for getting the best window into the sideband
+        NEG_START_ADJ = 200
+        NEG_END_ADJ = -1_000
+        POS_START_ADJ = 1_000
 
         lorentzians = []
         for i in range(1, nFiles+1):
             # Create a HeterodyneData object for each file in the directory
             hetr_file = HeterodyneData(HETERODYNE_RAW, HET_ST80_TEMPLATE.format(i), HETR_UNITS)
-            
-            # Positive sideband - Larger frequency than main peak
+
+            # Tune the sideband window
             if which_sideband == "pos":
-                lorentzians.append(hetr_file.fit_right_peak())
-            # Negative sideband - Smaller frequency than main peak
-            if which_sideband == "neg":
-                lorentzians.append(hetr_file.fit_left_peak())
+                hetr_file.trim_spectrum_to_sideband(which_sideband, POS_START_ADJ)
+            elif which_sideband == "neg":
+                hetr_file.trim_spectrum_to_sideband(which_sideband, NEG_START_ADJ, NEG_END_ADJ)       
             # Selected sideband is not an option
             else:
                 raise ValueError(f"`{which_sideband}` is not a sideband. Must be 'pos' or 'neg'.")
             
-        self._generate_multiple_reports(lorentzians, HETERODYNE_RAW, HET_ST80_TEMPLATE, which_sideband, HETR_SAMPLING_RATE)
+            lorentzians.append(hetr_file.fit_lorentzian(which_sideband, mode))
+
+        self._generate_multiple_reports(lorentzians, HETERODYNE_RAW, HET_ST80_TEMPLATE, mode, HETR_SAMPLING_RATE)
 
         return 
