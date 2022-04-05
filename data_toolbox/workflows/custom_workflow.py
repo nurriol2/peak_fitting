@@ -109,50 +109,6 @@ class CustomWorkflow(Workflow):
             lorentzians.append(split_det_file.init_lorentzian())
 
         self._generate_multiple_reports(lorentzians, SPLIT_DETECTION_RAW, file_template, mode, SPLIT_DET_SAMPLING_RATE)
-        # # Each Lorentzian object carries one element from each of the 3 time series
-        # # Map between the time series order and the `feature` it corresponds to
-        # feature_map = {
-        #     0:"Area under Lorentzian fit (Mode:  {})",
-        #     1:"Mechanical frequency (Mode:  {})",
-        #     2:"Line width; FWHM of Lorentzian fit (Mode:  {})"
-        # }
-
-        # # Enumerate the time series
-        # for key, signal in enumerate(self._build_time_series(lorentzians)):
-        #     # Set up `Report` attributes
-        #     workflow_used = self.workflow_type
-        #     data_source = os.path.join(SPLIT_DETECTION_RAW, file_template)
-        #     feature = feature_map[key].format(mode)
-        #     # Actually calcualte the ADEV and coefficients here
-        #     coefficients = self._run_workflow(signal, SPLIT_DET_SAMPLING_RATE)
-
-        #     # Generate a `Report` with the appropriate `feature`
-        #     if key == 0:
-        #         report = Report(
-        #             workflow_used = workflow_used,
-        #             data_source = data_source,
-        #             feature = feature,
-        #             coefficients = coefficients
-        #         )
-        #         self._set_area_report(report)
-            
-        #     if key == 1:
-        #         report = Report(
-        #             workflow_used = workflow_used,
-        #             data_source = data_source,
-        #             feature = feature,
-        #             coefficients = coefficients
-        #         )
-        #         self._set_freq_report(report)
-            
-        #     if key == 2:
-        #         report = Report(
-        #             workflow_used = workflow_used,
-        #             data_source = data_source,
-        #             feature = feature,
-        #             coefficients = coefficients
-        #         )
-        #         self._set_line_report(report)
 
         return 
 
