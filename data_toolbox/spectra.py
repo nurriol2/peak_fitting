@@ -1,3 +1,4 @@
+from audioop import reverse
 import os
 import scipy
 import pandas as pd
@@ -266,7 +267,25 @@ class HeterodyneData(SpectrumFile):
         # Trim the data starting and ending at the specified frequencies
         self.trim_data(low=low, high=high)
 
-        return 
+        return
+
+    def fit_peak_choice(self, which_sideband, mode):
+
+        # Find peaks in the sideband
+        peak_idxs, _ = find_peaks(self.spectrum)
+        # Widths of the found peaks
+        wids = peak_widths(self.spectrum, peak_idxs)[0]
+        # Sort the found peaks according to widths in descending order
+        sorted_wids = list(zip(wids, peak_idxs))
+        sorted_wids.sort(key = lambda pair: pair[0], reverse=True)
+        # Assume the two widest peaks in this sideband are the peaks to fit
+        peak_a, peak_b = sorted_wids[0:2]
+
+        # Determine the peak to fit according to chosen sideband and the directional mode 
+        # TODO
+
+
+        return (peak_a, peak_b)
 
       
 
