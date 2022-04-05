@@ -107,7 +107,6 @@ class SpectrumFile:
         self.frequencies = self.frequencies[low_index:high_index+1]
         self.spectrum = self.spectrum[low_index:high_index+1]
         return 
- 
 
 # End SpectrumFile
 
@@ -173,127 +172,50 @@ class HeterodyneData(SpectrumFile):
         about the measurements of the fit (e.g. FWHM, mechanical frequency, linewidth).
     """  
 
-    # Area under the spectrum
-    raw_area: float = field(init=False)
-    # Initial estimates for the widths of each peak
-    left_width:  float = field(init=False)
-    right_width: float = field(init=False)
-    main_width: float = field(init=False)
-    
+    def _assign_left_and_right(self, tall_to_short):
 
-    def __post_init__(self):
-        super().__post_init__()
-        self._set_width_estimates()
-        return
+        # Assume the center peak is the tallest peak
+        _, center_idx = tall_to_short[0]
 
 
-    def _set_width_estimates(self):
-        estimates = peak_widths(self.spectrum, self._peak_selection(), rel_height=0.5)
-        values = estimates[0]
-        self.left_width = values[0]
-        self.main_width = values[1]
-        self.right_width = values[2]
-        return 
+        # Tallest peak on the left of the center peak
+        #   Look through the remaining peaks for the first instance of an index below the center index
+        left_idx = (next(pair[1] for pair in tall_to_short[1:] if pair[1] < center_idx))
+        # Tallest peak on the right of the center peak 
+        #   Look through the remaining peaks for the first instance of an index above the center index
+        right_idx = (next(pair[1] for pair in tall_to_short[1:] if pair[1] > center_idx))
 
+        return (left_idx, right_idx)
 
-    def _peak_selection(self):
-        # Locate peaks in the spectrum by index
+    def _partition_spectrum(self):
+
+        # Starting index of the negative sideband
+        START = 0
+        # Ending index of the positive sideband
+        END = len(self.spectrum)-1
+
+        # Get an array of indices corresponding to peaks in the spectrum
         peak_indices, _ = find_peaks(self.spectrum)
-        # Select corresponding amplitudes of found peaks
+        # Get the amplitude of the found peaks
         peak_amplitudes = self.spectrum[peak_indices]
-        
-        # Sort the peaks according to height; largest to smallest
-        amp_idx_pairs = list(zip(peak_amplitudes, peak_indices)) 
-        amp_idx_pairs.sort(key=lambda pair : pair[0], reverse=True)
+        # Create (peak amplitude, peak index) pairs
+        peak_amp_idx_pairs = list(zip(peak_amplitudes, peak_indices))
+        # Sort the peaks according to height (tallest to shortest)
+        peak_amp_idx_pairs.sort(key = lambda pair: pair[0], reverse=True)
 
-        # Track the left and right side peaks
-        left_idx = None
-        right_idx = None
+        # Get a rough estimate of the partition indices
+        # For the positive sideband, the right index is a starting index
+        # For the negative sideband, the left index is an ending index
+        left_idx, right_idx = self._assign_left_and_right(peak_amp_idx_pairs)
+        # Create the partition
+        partition = {
+            "neg":(START, left_idx),
+            "pos":(right_idx, END)
+        }
 
-        # Main peak is always the tallest
-        main_amp, main_idx = amp_idx_pairs[0]
-
-        # The next tallest peak should appear on one side of the main peak
-        side_a_amp, side_a_idx = amp_idx_pairs[1]
-
-        # The opposite side peak depends on where side_a peak is located
-        side_b_pair = None
-        # The side_a peak was left of the main peak
-        if side_a_idx < main_idx:
-            left_idx = side_a_idx
-            # Compare indices to find the tallest peak on the right of the main peak
-            right_idx = (next(pair[1] for pair in amp_idx_pairs[2:] if pair[1] > main_idx))
-        # The side_a peak was right of the main peak
-        else:
-            right_idx = side_a_idx
-            # Compare indices to find the tallest peak on the left of the main peak
-            left_idx = (next(pair[1] for pair in amp_idx_pairs[2:] if pair[1] < main_idx))
-
-        return (left_idx, main_idx, right_idx)
+        return partition
 
 
-    def fit_right_peak(self, tune=0.75):
-        """
-        Note:   This function will irreversibly mutate the HetrodyneData object.
-                Create a new HeteroDyne object to fit main or left peaks.
-        """
+      
 
-        _, main_loc, right_loc = self._peak_selection()
-        # Find the frequency that escapes main peak influence
-        escape_index = int(main_loc + tune*(right_loc-main_loc))
-        # Trim the spectrum according to `escape_index`
-        trim_low = self.frequencies[escape_index]
-        self.trim_data(low=trim_low)
-        
-        # Right index has the property that it's distance from end of array is constant
-        dyn_right_loc = -1*(len(self.frequencies)-right_loc)
-        # Initial guess for Lorentzian
-        right_guess = [self.spectrum[dyn_right_loc],
-                       self.frequencies[dyn_right_loc],
-                       self.right_width,
-                       self.spectrum.min()]
-
-        def _1Lorentzian(x, amp, cen, wid, back):
-            return (amp*wid**2/((x-cen)**2+wid**2))+back
-
-        # Fit Lorentzian parameters
-        right_optimal_params, _ = scipy.optimize.curve_fit(_1Lorentzian,
-                                                           self.frequencies,
-                                                           self.spectrum,
-                                                           p0=right_guess,
-                                                           maxfev=5000)
-
-        return Lorentzian(self.frequencies, *right_optimal_params)
-
-    def fit_left_peak(self, tune=0.40):
-        """
-        Note:   This function will irreversibly mutate the HetrodyneData object.
-                Create a new HeteroDyne object to fit main or right peaks.
-        """
-
-        left_loc, main_loc, _ = self._peak_selection()
-        # Find the frequency that escapes main peak influence
-        escape_index = int(main_loc - tune*(main_loc-left_loc))
-        # Trim the spectrum according to `escape_index`
-        trim_high = self.frequencies[escape_index]
-        self.trim_data(high=trim_high)
-        
-        # Left index has the property that it's distance from start of array is constant
-        # Initial guess for Lorentzian
-        left_guess = [self.spectrum[left_loc],
-                       self.frequencies[left_loc],
-                       self.left_width,
-                       self.spectrum.min()]
-
-        def _1Lorentzian(x, amp, cen, wid, back):
-            return (amp*wid**2/((x-cen)**2+wid**2))+back
-
-        # Fit Lorentzian parameters
-        left_optimal_params, _ = scipy.optimize.curve_fit(_1Lorentzian,
-                                                           self.frequencies,
-                                                           self.spectrum,
-                                                           p0=left_guess,
-                                                           maxfev=5000)
-
-        return Lorentzian(self.frequencies, *left_optimal_params)
 # End HeterodyneData
