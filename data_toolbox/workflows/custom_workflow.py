@@ -1,4 +1,3 @@
-from multiprocessing.sharedctypes import Value
 import os
 import numpy as np
 from data_toolbox.report import Report
@@ -30,7 +29,7 @@ class CustomWorkflow(Workflow):
         return
 
 
-    def _build_time_series(self, lorentzians):
+    def _extract_feature_signal(self, lorentzians):
         signals = []
         for lorentzian in lorentzians:
             signals.append(lorentzian.all_values())
@@ -50,7 +49,7 @@ class CustomWorkflow(Workflow):
         }
 
         # Enumerate the time series
-        for key, signal in enumerate(self._build_time_series(lorentzians)):
+        for key, signal in enumerate(self._extract_feature_signal(lorentzians)):
             # Set up `Report` attributes
             workflow_used = self.workflow_type
             data_source = os.path.join(dir, templ)
