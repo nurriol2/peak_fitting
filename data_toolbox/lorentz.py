@@ -52,12 +52,12 @@ class Lorentzian:
 
     def mechanical_frequency(self):
         """
-        Determine the amplitude of the peak.
+        Frequency of maximum amplitude.
 
         Returns:
-        (float:  Amplitude of the peak.
+        (float):  Frequency (Hz)
         """
-        return max(self.values)
+        return self.cen
     
 
     def linewidth(self):
