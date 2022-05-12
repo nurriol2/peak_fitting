@@ -52,21 +52,27 @@ def clean_path(source, mode, sideband=None):
 
 def ucl_split_detection(mode):
 
+    """
+    Preprocess raw split detection data into a CSV for the specified mode.
 
+    Args:
+        mode (str):  Directional mode identifier for the clean filename template.
+                     Must be either 'x' or 'y'
+    """
 
     # Directory of all raw UCL data
     ucl_fits_path = constants.RAW_DATA_DIRECTORY.joinpath("raw_ucl_fits")
     
 
-    # Load time series data for each column into memory
+    ### Load time series data for each column into memory ###
     area_under_curve = np.loadtxt(ucl_fits_path.joinpath(f"area{mode}.dat"))
     logging.debug(f"AREA: {area_under_curve}")
 
     mechanical_frequency = np.loadtxt(ucl_fits_path.joinpath(f"f{mode}.dat"))
     logging.debug(mechanical_frequency)
 
-    # Linewidth data was not fit by UCL
-    # Placeholder signal with the same shape as AOC is made instead
+    # Linewidth data was not fit by UCL. Placeholder signal is used instead.
+    # Placeholder has the same shape as area under curve Series.
     aoc_shape = area_under_curve.shape
     linewidth = np.full(shape=aoc_shape, fill_value=-1*np.inf)
     logging.debug(linewidth)
@@ -75,7 +81,7 @@ def ucl_split_detection(mode):
     logging.debug(time_step)
 
 
-    # Read in the clean 
+    # Read in the clean file as a data frame
     target = clean_path(source="ucl", mode=mode, sideband=None)
     logging.debug(target)
     logging.debug(type(target))
@@ -88,6 +94,7 @@ def ucl_split_detection(mode):
     df["linewidth"] = linewidth
     df["time_step"] = time_step
 
+    # Write the populated data frame to the CSV
     df.to_csv(target, index_label="index")
 
     return 
