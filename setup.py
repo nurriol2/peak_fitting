@@ -7,7 +7,7 @@
 # │   |   ├── ...
 # │   |   ├── chb_st80_1
 # │   |   ├── ...
-# │   ├── ucl_time_series
+# │   ├── raw_ucl_fits
 # │   |   ├── areax.dat
 # │   |   ├── areay.dat
 # │   |   ├── fit_neg_sideband.dat
@@ -16,17 +16,21 @@
 # │   |   ├── fy.dat
 # │   ├── heterodyne.zip
 # │   ├── split_detection.zip
-# ├── clean_data
+# ├── clean_data # Name convention:  source_mode_sideband.CSV
 # │   ├── heterodyne
-# │   │   ├── cst_negative_sideband_table.CSV
-# │   │   ├── cst_positive_sideband_table.CSV
-# │   │   ├── ucl_negative_sideband_table.CSV
-# │   │   ├── ucl_positive_sideband_table.CSV
+# │   │   ├── cst_x_negative.CSV
+# │   │   ├── cst_x_positive.CSV
+# │   │   ├── cst_y_negative.CSV
+# │   │   ├── cst_y_positive.CSV
+# │   │   ├── ucl_x_negative.CSV
+# │   │   ├── ucl_x_positive.CSV
+# │   │   ├── ucl_y_negative.CSV
+# │   │   ├── ucl_y_positive.CSV
 # │   ├── split_detection
-# │   │   ├── cst_x_mode_table.CSV
-# │   │   ├── cst_y_mode_table.CSV
-# │   │   ├── ucl_x_mode_table.CSV
-# │   │   ├── ucl_y_mode_table.CSV
+# │   │   ├── cst_x_none.CSV
+# │   │   ├── cst_y_none.CSV
+# │   │   ├── ucl_x_none.CSV
+# │   │   ├── ucl_y_none.CSV
 
 import os
 import logging
@@ -77,13 +81,19 @@ def _add_files(parent, filenames):
     parent (string):  Parent directory.
     filename (string):  Name of the file to be created. 
     """
+
+    # Column names
+    header = "time_step,area_under_curve,mechanical_frequency,linewidth"
+
     for filename in filenames:
         # Path to the desired file
         fullpath = os.path.join(parent, filename)
-        
+
         # Attempt to create the file
+        # TODO:  Could this be better with a context manager?
         try:
-            f = open(fullpath, 'x')
+            f = open(fullpath, 'w')
+            f.write(header)
             f.close()
         except FileExistsError:
             logging.debug(f"{fullpath} already exists.")
@@ -109,8 +119,10 @@ def build_file_tree():
 
 
     # Cleaned heterodyne files
-    hetr_template_files = ["cst_positive_sideband_table.CSV", "cst_negative_sideband_table.CSV", 
-                            "ucl_positive_sideband_table.CSV", "ucl_negative_sideband_table.CSV"]
+    hetr_template_files = ["cst_x_positive.CSV", "cst_x_negative.CSV", 
+                            "ucl_x_positive.CSV", "ucl_x_negative.CSV",
+                            "cst_y_positive.CSV", "cst_y_negative.CSV", 
+                            "ucl_y_positive.CSV", "ucl_y_negative.CSV"]
     # Path to clean heterodyne directory
     clean_heterodyne_path = os.path.join(CLEAN_DATA_DIR, "heterodyne/")
     # Add files to clean heterodyne directory
@@ -118,8 +130,8 @@ def build_file_tree():
 
 
     # Cleaned split detection files
-    split_detection_template_files = ["cst_x_mode_table.CSV", "cst_y_mode_table.CSV", 
-                                        "ucl_x_modetable.CSV", "ucl_y_mode_table.CSV"]
+    split_detection_template_files = ["cst_x_none.CSV", "cst_y_none.CSV", 
+                                        "ucl_x_none.CSV", "ucl_y_none.CSV"]
     # Path to clean split detection directory
     clean_split_detection_path = os.path.join(CLEAN_DATA_DIR, "split_detection/")
     # Add files to clean split detection directory
