@@ -1,12 +1,10 @@
-from unicodedata import name
 import pandas as pd
 import numpy as np 
-import pathlib
-import constants
+import data_toolbox.constants as constants
 import logging
 FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
-#logging.disable(logging.CRITICAL)
+logging.disable(logging.CRITICAL)
 
 
 ### General Helper Functions ###
@@ -82,7 +80,24 @@ def clean_path(source, mode, sideband=None):
 
     return filepath
 
+def ready_all_ucl():
+    
+    """
+    Convenience function to clean the data from raw UCL fits. 
 
+    Preproccess raw split detection data for each directional mode.
+    Preproccess raw heterodyne data for each directional mode and sideband.
+    Processed files should be populated under `experiment_data/clean_data/...`
+    """
+
+    preprocess_ucl_split_detection('x')
+    preprocess_ucl_heterodyne('x', "positive")
+    preprocess_ucl_heterodyne('x', "negative")
+    preprocess_ucl_split_detection('y')
+    preprocess_ucl_heterodyne('y', "positive")
+    preprocess_ucl_heterodyne('y', "negative")
+
+    return 
 
 ### Data Source Specific Preproccessing Functions ### 
 def preprocess_ucl_split_detection(mode):
@@ -162,5 +177,10 @@ def preprocess_ucl_heterodyne(mode, sideband):
     
     return 
 
-if __name__=="__main__":
-    preprocess_ucl_heterodyne('x', "negative")
+def preprocess_cst_split_detection(mode):
+    pass
+    return 
+
+def preprocess_cst_heterodyne(mode, sideband):
+    pass
+    return 
