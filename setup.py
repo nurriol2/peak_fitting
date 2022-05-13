@@ -33,9 +33,6 @@
 # │   │   ├── ucl_y_none.CSV
 
 import os
-import logging
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
-logging.disable(logging.CRITICAL)
 
 # Full path to the location of this file
 PREFIX = os.path.join(os.getcwd(), "experiment_data/")
@@ -65,9 +62,8 @@ def _add_child_dirs(parent, children):
         # Check directory path in the terminal
         try:
             os.makedirs(dir_path)
-            logging.debug(f"Created {dir_path}")
         except FileExistsError:
-            logging.debug(f"Skipping {dir_path}...")
+            print(f"Skipping {dir_path}...")
 
     return 
 
@@ -96,7 +92,7 @@ def _add_files(parent, filenames):
             f.write(header)
             f.close()
         except FileExistsError:
-            logging.debug(f"{fullpath} already exists.")
+            print(f"{fullpath} already exists.")
 
     return  
 
