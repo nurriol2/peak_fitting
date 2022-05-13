@@ -230,6 +230,7 @@ class HeterodyneData(SpectrumFile):
         # For the negative sideband, the left index is an ending index
         left_idx, right_idx = self._assign_left_and_right(peak_amp_idx_pairs)
         # Create the partition
+        # TODO:  Use "positive" and "negative" throughout
         partition = {
             "neg":(START, left_idx),
             "pos":(right_idx, END)
