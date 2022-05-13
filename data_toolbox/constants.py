@@ -15,3 +15,8 @@ SPLIT_DETECTION_SAMLPING_STEP_SIZE = 772.26 # Seconds
 ### Units ###
 SPLIT_DETECTION_UNITS = "m^2/Hz"
 HETERODYNE_UNITS = "V^2/Hz"
+
+### Hueristics:  Slight adjustments to the window of the sideband ###
+NEG_START_ADJ = 200
+NEG_END_ADJ = -1_000
+POS_START_ADJ = 1_000
