@@ -219,7 +219,7 @@ def one_split_detection_cycle(spectrum_path):
     Fit a Lorentzian to a single raw split detection data file.
     
     Args:
-        spectrum_path (pathlib.Path):  Path to a raw split detection data file.
+        spectrum_path (pathlib.Path):  Path to a single raw split detection data file.
 
     Returns:
         (Lorentzian): An object representing the best fit single peak Lorentzian 
@@ -228,11 +228,12 @@ def one_split_detection_cycle(spectrum_path):
                       area under the curve, mechanical frequency, and linewidth.
     """
 
+    # Raw split detection data directory
     directory = str(spectrum_path.parent)
     # Example:  ch*_st80_###.CSV; File suffix is required
     pattern = str(spectrum_path.name)
 
-    # Create a split detection object
+    # Create a split detection file object
     split_det_obj = spectra.SplitDetectionData(directory=directory, pattern=pattern, units=constants.SPLIT_DETECTION_UNITS)
 
     # Fit a lorentzian to the split detection object
@@ -250,10 +251,10 @@ def preprocess_cst_split_detection(mode):
                      Must be either 'x' or 'y'
     """
 
-    # List of Paths to all the split detection files with specified mode
+    # List of Paths to all raw split detection files with specified mode
     split_detection_paths = find_split_detection_spectra(mode=mode)
 
-    # Container for array of time series per feature
+    # Container for array of time series (per feature)
     feature_arrays = {
         "time_step":None,
         "area_under_curve":[],
@@ -287,9 +288,134 @@ def preprocess_cst_split_detection(mode):
 
     return 
 
+def find_heterodyne_spectra():
+    """
+    Search `experiment_data/raw_data/heterodyne` for all heterodyne CSV files.
+
+    Takes no arguments because, for a single file, different mode and sideband
+    identifiers will access the same file.
+    For example, loading (x, negative) and (y, positive) portions of het_st80_32.CSV
+    both require het_st80_32.CSV.
+
+    Returns:
+        (list(pathlib.Path)):  A list of split detection data files sorted by file number.
+    """
+
+    # Path to directory of raw heterodyne data
+    hetr_dir = constants.RAW_DATA_DIRECTORY.joinpath("heterodyne")
+
+    # Filename pattern for heterodyne spectra
+    pattern = "het_st80_*.CSV"
+
+    # Match all heterodyne files within the raw heterodyne directory
+    matching_files = list(hetr_dir.rglob(pattern=pattern))
+
+    # The final Path component contains the file number
+    # The file number is always the 2th element after splitting by '_' (with this naming scheme)
+    # Cast the numeric part as int to sort by increasing order
+    key = lambda p: int(p.stem.split('_')[2])
+    # Sort by increasing file number
+    matching_files.sort(key=key, reverse=False)
+
+    return matching_files
+
+def one_heterodyne_cycle(spectrum_path, mode, sideband):
+
+    """
+    Fit a Lorentzian to a single raw heterodyne data file.
+
+    The negative sideband is always the region LEFT of the center peak.
+        The peak at the lower frequency in this region is the Y mode.
+        The peak at the higher frequency in this region is the X mode.
+
+    The positive sideband is always the region RIGHT of the center peak.
+        The peak at the lower frequency in this region is the X mode.
+        The peak at the higher frequency in this region is the Y mode.
+
+    Args:
+        spectrum_path (list(pathlib.Path)): Path to a single raw heterodyne data file.
+
+        mode (str):  Directional mode identifier.
+                     Must be either 'x' or 'y'
+
+        sideband (str):  Sideband identifier. 
+                         Must be either "positive" or "negative".
+
+    Returns:
+        (Lorentzian): An object representing the best fit single peak Lorentzian 
+                      to the split detection data.
+                      Lorentzian objects have methods defined for computing the
+                      area under the curve, mechanical frequency, and linewidth.
+
+
+    """
+    
+    # (Workaround) Format sideband identifier to use trimming functions
+    # TODO:  Change spectra module to use "positive" and "negative" 
+    which_sideband = {
+        "positive":"pos",
+        "negative":"neg"
+    }
+
+    # Raw heterodyne data directory
+    directory = str(spectrum_path.parent)
+    # Example:  het_st80_###.CSV; File suffix is required
+    pattern = str(spectrum_path.name)
+
+    # Create a heterodyne file object
+    hetr_obj = spectra.HeterodyneData(directory=directory, pattern=pattern, units=constants.HETERODYNE_UNITS)
+
+    # Fitting a Lorentzian works best if the data is trimmed first
+    # Trim according to the sideband of interest
+    if sideband == "positive":
+        hetr_obj.trim_spectrum_to_sideband(which_sideband=which_sideband[sideband], tune_start=constants.POS_START_ADJ)
+    if sideband == "negative":
+        hetr_obj.trim_spectrum_to_sideband(which_sideband=which_sideband[sideband], tune_start=constants.NEG_START_ADJ, tune_end=constants.NEG_END_ADJ)
+    
+    # Fit a Lorentzian according to the specified peak
+    lorentz = hetr_obj.fit_lorentzian(which_sideband=which_sideband[sideband], mode=mode)
+
+    return lorentz
+
 def preprocess_cst_heterodyne(mode, sideband):
-    pass
-    return 
+    
+
+    # List of Paths to all raw heterodyne detection files
+    heterodyne_paths = find_heterodyne_spectra()
+
+    # Container for array of time series (per feature)
+    feature_arrays = {
+        "time_step":None,
+        "area_under_curve":[],
+        "mechanical_frequency":[],
+        "linewidth":[]
+    }
+
+    # Iterate over the file Paths
+    for spectrum_path in heterodyne_paths:
+        # Fit a Lorentzian curve to a single heterodyne spectrum
+        current_lorentz = one_heterodyne_cycle(spectrum_path=spectrum_path, mode=mode, sideband=sideband)
+        ### Measure features of the best fit Lorentzian ###
+        ### Add measurements to the corresponding array of `feature_arrays`
+        feature_arrays["area_under_curve"].append(current_lorentz.area_under_curve())
+        feature_arrays["mechanical_frequency"].append(current_lorentz.mechanical_frequency())
+        feature_arrays["linewidth"].append(current_lorentz.linewidth())
+
+    # Create the time step array independent of the Lorentzian features
+    feature_arrays["time_step"] = np.arange(0, len(feature_arrays["area_under_curve"])) * constants.HETERODYNE_SAMPLING_STEP_SIZE
+
+    ### Write the collected feature measurements to a frame ###
+    target = clean_path(source="cst", mode=mode, sideband=sideband)
+    df = pd.read_csv(target)
+
+    # Keys of the features are the same as column labels
+    for key in feature_arrays.keys():
+        df[key] = feature_arrays[key]
+
+    # Actual write func call
+    df.to_csv(target, index_label="index")
+
+    return
 
 def ready_all_cst():
 
@@ -304,4 +430,9 @@ def ready_all_cst():
     
     preprocess_cst_split_detection('x')
     preprocess_cst_split_detection('y')
+    preprocess_cst_heterodyne('x', "positive")
+    preprocess_cst_heterodyne('x', "negative")
+    preprocess_cst_heterodyne('y', "positive")
+    preprocess_cst_heterodyne('y', "negative")
+
     return 
