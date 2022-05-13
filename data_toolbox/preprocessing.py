@@ -142,6 +142,15 @@ def preprocess_ucl_split_detection(mode):
     return 
 
 def preprocess_ucl_heterodyne(mode, sideband):
+    """
+    Preprocess raw heterodyne data into a CSV for the specified directional mode and sideband.
+
+    Args:
+        mode (str):  Directional mode identifier for the clean filename template.
+                     Must be either 'x' or 'y'
+
+        sideband (str):  Sideband identifier for the clean filename template. 
+    """
 
     ### Locate raw data file ###
     # Load the corresponding heterodyne fit into memory as a dataframe
@@ -232,10 +241,67 @@ def one_split_detection_cycle(spectrum_path):
     return lorentz
 
 def preprocess_cst_split_detection(mode):
-    
-    pass
+
+    """
+    Preprocess raw split detection data into a CSV for the specified mode.
+
+    Args:
+        mode (str):  Directional mode identifier for the clean filename template.
+                     Must be either 'x' or 'y'
+    """
+
+    # List of Paths to all the split detection files with specified mode
+    split_detection_paths = find_split_detection_spectra(mode=mode)
+
+    # Container for array of time series per feature
+    feature_arrays = {
+        "time_step":None,
+        "area_under_curve":[],
+        "mechanical_frequency":[],
+        "linewidth":[]
+    }
+
+    # Iterate over the file Paths
+    for spectrum_path in split_detection_paths:
+        # Fit a Lorentzian curve to a single split detection spectrum
+        current_lorentz = one_split_detection_cycle(spectrum_path=spectrum_path)
+        ### Measure features of the best fit Lorentzian ###
+        ### Add measurements to the corresponding array of `feature_arrays`
+        feature_arrays["area_under_curve"].append(current_lorentz.area_under_curve())
+        feature_arrays["mechanical_frequency"].append(current_lorentz.mechanical_frequency())
+        feature_arrays["linewidth"].append(current_lorentz.linewidth())
+
+    # Create the time step array independent of the Lorentzian features
+    feature_arrays["time_step"] = np.arange(0, len(feature_arrays["area_under_curve"])) * constants.SPLIT_DETECTION_SAMLPING_STEP_SIZE
+
+    ### Write the collected feature measurements to a frame ###
+    target = clean_path(source="cst", mode=mode)
+    df = pd.read_csv(target)
+
+    # Keys of the features are the same as column labels
+    for key in feature_arrays.keys():
+        df[key] = feature_arrays[key]
+
+    # Actual write func call
+    df.to_csv(target, index_label="index")
+
     return 
 
 def preprocess_cst_heterodyne(mode, sideband):
     pass
+    return 
+
+def ready_all_cst():
+
+    """
+    Convenience function to clean the data from raw spectra. 
+    Uses custom (cst) framework. 
+
+    Preproccess raw split detection data for each directional mode.
+    Preproccess raw heterodyne data for each directional mode and sideband.
+    Processed files should be populated under `experiment_data/clean_data/...`
+    """
+    
+    preprocess_cst_split_detection('x')
+    preprocess_cst_split_detection('y')
     return 
