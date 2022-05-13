@@ -1,11 +1,7 @@
 import pandas as pd
 import numpy as np 
 import data_toolbox.constants as constants
-import logging
-FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
-logging.disable(logging.CRITICAL)
-
+import data_toolbox.spectra as spectra
 
 ### General Helper Functions ###
 
@@ -99,6 +95,8 @@ def ready_all_ucl():
 
     return 
 
+
+
 ### Data Source Specific Preproccessing Functions ### 
 def preprocess_ucl_split_detection(mode):
 
@@ -116,25 +114,19 @@ def preprocess_ucl_split_detection(mode):
 
     ### Load time series data for each column into memory ###
     area_under_curve = np.loadtxt(ucl_fits_path.joinpath(f"area{mode}.dat"))
-    logging.debug(f"AREA: {area_under_curve}")
 
     mechanical_frequency = np.loadtxt(ucl_fits_path.joinpath(f"f{mode}.dat"))
-    logging.debug(mechanical_frequency)
 
     # Linewidth data was not fit by UCL. Placeholder signal is used instead.
     # Placeholder has the same shape as area under curve Series.
     aoc_shape = area_under_curve.shape
     linewidth = np.full(shape=aoc_shape, fill_value=-1*np.inf)
-    logging.debug(linewidth)
     
     time_step = np.arange(0, len(area_under_curve)) * constants.SPLIT_DETECTION_SAMLPING_STEP_SIZE
-    logging.debug(time_step)
 
 
     # Read in the clean file as a data frame
     target = clean_path(source="ucl", mode=mode, sideband=None)
-    logging.debug(target)
-    logging.debug(type(target))
 
     df = pd.read_csv(target)
     
@@ -161,9 +153,8 @@ def preprocess_ucl_heterodyne(mode, sideband):
     current_names = list(matched_df.columns)
     standard_names = ["area_under_curve" ,"mechanical_frequency" ,"linewidth"]
     name_map = {curr:std for curr,std in list(zip(current_names, standard_names))}
-    logging.debug(name_map)
     matched_df = matched_df.rename(columns=name_map)
-    logging.debug(f"Matched names: {matched_df.columns}")
+
 
     # Create data for time step column
     time_step = np.arange(0, len(matched_df)) * constants.SPLIT_DETECTION_SAMLPING_STEP_SIZE
@@ -172,12 +163,76 @@ def preprocess_ucl_heterodyne(mode, sideband):
 
     ### Write dataframe to file ###
     target = clean_path(source="ucl", mode=mode, sideband=sideband)
-    logging.debug(f"Target file {target}")
     matched_df.to_csv(target, index_label="index")
     
     return 
 
+def find_split_detection_spectra(mode):
+    """
+    Search `experiment_data/raw_data/split_detection` for all split detection CSV files
+    for a specific directional mode.
+
+    Args:
+        mode (str):  Directional mode identifier for split detection data.
+                     Must be either 'x' or 'y'
+
+    Returns:
+        (list(pathlib.Path)):  A list of split detection data files sorted by file number.
+    """
+
+    # Path to directory of raw split detection data
+    split_det_dir = constants.RAW_DATA_DIRECTORY.joinpath("split_detection")
+
+    # Filename prefix depends on the directional mode 
+    prefix = {
+        'x':"cha",
+        'y':"chb"
+    }
+
+    # Formatted filename depending on the specified mode
+    pattern = f"{prefix[mode]}_st80_*.CSV"
+    
+    # Match all split detection files within the raw directory for the given mode
+    matching_files = list(split_det_dir.rglob(pattern=pattern))
+
+    # The final Path component contains the file number
+    # The file number is always the 2th element after splitting by '_' (with this naming scheme)
+    # Cast the numeric part as int to sort by increasing order
+    key = lambda p: int(p.stem.split('_')[2])
+    # Sort by increasing file number
+    matching_files.sort(key=key, reverse=False)
+    
+    return matching_files
+
+def one_split_detection_cycle(spectrum_path):
+
+    """
+    Fit a Lorentzian to a single raw split detection data file.
+    
+    Args:
+        spectrum_path (pathlib.Path):  Path to a raw split detection data file.
+
+    Returns:
+        (Lorentzian): An object representing the best fit single peak Lorentzian 
+                      to the split detection data.
+                      Lorentzian objects have methods defined for computing the
+                      area under the curve, mechanical frequency, and linewidth.
+    """
+
+    directory = str(spectrum_path.parent)
+    # Example:  ch*_st80_###.CSV; File suffix is required
+    pattern = str(spectrum_path.name)
+
+    # Create a split detection object
+    split_det_obj = spectra.SplitDetectionData(directory=directory, pattern=pattern, units=constants.SPLIT_DETECTION_UNITS)
+
+    # Fit a lorentzian to the split detection object
+    lorentz = split_det_obj.init_lorentzian()
+
+    return lorentz
+
 def preprocess_cst_split_detection(mode):
+    
     pass
     return 
 
