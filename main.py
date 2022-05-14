@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import data_toolbox.constants as constants
+from datetime import datetime
 from setup import build_file_tree
 from data_toolbox.time_series import TimeSeries
 from data_toolbox.plotting import annotate_axis, three_by_one
@@ -49,15 +50,15 @@ def write_comparison_name(mode, sideband):
 
     # Indicates Split Detection data
     if sideband is None:
-        comparison_name = f"Split Detection Measurement:  {mode} Directional Mode"
+        comparison_name = f"Split Detection Measurement: {mode} Directional Mode"
     # Only heterodyne measurements have sidebands
     else:
-        comparison_name = f"Heterodyne Measurement:  {mode} Directional Mode of {sideband} Sideband"
+        comparison_name = f"Heterodyne Measurement: {mode} Directional Mode of {sideband} Sideband"
 
     return comparison_name
 
 
-def plot_full_comparison(mode, sideband=None):
+def plot_full_comparison(mode, sideband=None, view=False, save=False):
 
     """
     Iterate over combinations of directional mode and sideband. 
@@ -69,6 +70,12 @@ def plot_full_comparison(mode, sideband=None):
         
         sideband (str):  Sideband identifier. Can be either "positive" or "negative".
                          Defaults to None.
+
+        view (bool):  Determines if the comparison plot should be displayed
+                      after each call. Defaults to False.
+        
+        save (bool):  Determines if the comparison plot should be saved. 
+                      All images are saved under `saved_images`. Defaults to False.
     """
 
     # Load complementary data
@@ -116,8 +123,19 @@ def plot_full_comparison(mode, sideband=None):
     cst_lin.draw_on_axis(bax)
 
 
-    # Show the full comparison plot
-    plt.show()
+    if view:
+        # Show the full comparison plot
+        plt.show()
+
+    if save:
+        # Filename of the saved comparison plot
+        fname = comparison_name.lower().replace(' ', '_').replace(':', '')
+        # Time saved identifier 
+        saved_time = datetime.now().strftime("%Y%m%d%H%M%S")
+        # Fully formatted save location
+        save_location = constants.IMAGE_DIRECTORY.joinpath(f"{fname}_{saved_time}")
+        # Actual save call
+        plt.savefig(save_location, format="png")
 
     return
 
@@ -127,19 +145,19 @@ def main():
     # After that, they only serve to slow the code down
     # So, they are commented out in subsequent calls to `main`
     # TODO:  Make these calls conditional
-    # build_file_tree()
-    # ready_all_ucl()
-    # ready_all_cst()
+    build_file_tree()
+    ready_all_ucl()
+    ready_all_cst()
 
     # TODO:  Add figure saving flag
     split_detection_comparisons = [('x', None), ('y', None)]
     heterodyne_comparisons = [('x', "positive"), ('x', "negative"), ('y', "positive"), ('y', "negative")]
 
     for mode, sideband in heterodyne_comparisons:
-        plot_full_comparison(mode=mode, sideband=sideband)
+        plot_full_comparison(mode=mode, sideband=sideband, save=True)
 
     for mode, sideband in split_detection_comparisons:
-        plot_full_comparison(mode=mode, sideband=sideband)
+        plot_full_comparison(mode=mode, sideband=sideband, save=True)
 
     return
 
