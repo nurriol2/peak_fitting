@@ -166,7 +166,7 @@ def preprocess_ucl_heterodyne(mode, sideband):
 
 
     # Create data for time step column
-    time_step = np.arange(0, len(matched_df)) * constants.SPLIT_DETECTION_SAMLPING_STEP_SIZE
+    time_step = np.arange(0, len(matched_df)) * constants.HETERODYNE_SAMPLING_STEP_SIZE
     # Insert the time step column into the matching dataframe
     matched_df.insert(0, "time_step", time_step)
 
