@@ -82,9 +82,9 @@ def plot_full_comparison(mode, sideband=None, view=False, save=False):
     udf, cdf = load_complement_frames(mode=mode, sideband=sideband)
     
     # Determine the units of area under curve
-    units = constants.HETERODYNE_UNITS
+    units = constants.HETERODYNE_UNITS.strip("/Hz")
     if sideband is None:
-        units = constants.SPLIT_DETECTION_UNITS
+        units = constants.SPLIT_DETECTION_UNITS.strip("/Hz")
 
     ### Create time series from the data ###
     # Area under Lorentzian
@@ -133,9 +133,9 @@ def plot_full_comparison(mode, sideband=None, view=False, save=False):
         # Time saved identifier 
         saved_time = datetime.now().strftime("%Y%m%d%H%M%S")
         # Fully formatted save location
-        save_location = constants.IMAGE_DIRECTORY.joinpath(f"{fname}_{saved_time}")
+        save_location = constants.IMAGE_DIRECTORY.joinpath(f"{fname}_{saved_time}.png")
         # Actual save call
-        plt.savefig(save_location, format="png")
+        plt.savefig(save_location)
 
     return
 
