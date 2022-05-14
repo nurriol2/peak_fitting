@@ -3,6 +3,7 @@ import pathlib
 
 ### Directory paths ###
 PACKAGE_DIRECTORY = pathlib.Path(__file__).parents[1]
+IMAGE_DIRECTORY = PACKAGE_DIRECTORY.joinpath("saved_images/") # HACK:  The setup script also has IMAGE_DIRECTORY
 EXPERIMENT_DATA_DIRECTORY = PACKAGE_DIRECTORY.joinpath("experiment_data")
 RAW_DATA_DIRECTORY = EXPERIMENT_DATA_DIRECTORY.joinpath("raw_data")
 CLEAN_DATA_DIRECTORY = EXPERIMENT_DATA_DIRECTORY.joinpath("clean_data")
