@@ -39,7 +39,7 @@ import pathlib # HACK:  To make image directory sanely
 
 
 # Saved images directory located at the same level as this file
-IMAGE_DIRECTORY = pathlib.Path(__file__).joinpath("saved_images/") # HACK:  Example of how to update the rest of these paths
+IMAGE_DIRECTORY = pathlib.Path(__file__).parent.joinpath("saved_images/") # HACK:  Example of how to update the rest of these paths
 # Experiment data directory located at the same level as this file
 EXPERIMENT_DATA = os.path.join(os.getcwd(), "experiment_data/")
 # Top level directory for all raw data
@@ -108,8 +108,11 @@ def build_file_tree():
     Initialize template files for post-processed data.
     """
 
-    # Create directory for saved images
-    os.makedirs(IMAGE_DIRECTORY)
+    try:
+        # Create directory for saved images
+        os.makedirs(IMAGE_DIRECTORY)
+    except FileExistsError:
+        print(f"{IMAGE_DIRECTORY} already exists.")
 
     # Create directory for UCL fits
     _add_child_dirs(RAW_DATA_DIR, ["raw_ucl_fits"])
