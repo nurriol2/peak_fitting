@@ -1,7 +1,6 @@
 import pathlib
 
 
-
 ### Directory paths ###
 PACKAGE_DIRECTORY = pathlib.Path(__file__).parents[1]
 EXPERIMENT_DATA_DIRECTORY = PACKAGE_DIRECTORY.joinpath("experiment_data")
