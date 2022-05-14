@@ -47,8 +47,10 @@ def write_comparison_name(mode, sideband):
 
     comparison_name = None
 
+    # Indicates Split Detection data
     if sideband is None:
         comparison_name = f"Split Detection Measurement:  {mode} Directional Mode"
+    # Only heterodyne measurements have sidebands
     else:
         comparison_name = f"Heterodyne Measurement:  {mode} Directional Mode of {sideband} Sideband"
 
@@ -56,6 +58,18 @@ def write_comparison_name(mode, sideband):
 
 
 def plot_full_comparison(mode, sideband=None):
+
+    """
+    Iterate over combinations of directional mode and sideband. 
+    Generate a full (3 plots x 1 col) comparison plots of the feature time series.
+
+    Args:
+        mode (str):  Directional mode identifier. 
+                     Can be either 'x' or 'y'.
+        
+        sideband (str):  Sideband identifier. Can be either "positive" or "negative".
+                         Defaults to None.
+    """
 
     # Load complementary data
     udf, cdf = load_complement_frames(mode=mode, sideband=sideband)
@@ -109,6 +123,9 @@ def plot_full_comparison(mode, sideband=None):
 
 def main():
 
+    # These need to run once to preprocess the raw data into clean data
+    # After that, they only serve to slow the code down
+    # So, they are commented out in subsequent calls to `main`
     # TODO:  Make these calls conditional
     # build_file_tree()
     # ready_all_ucl()
