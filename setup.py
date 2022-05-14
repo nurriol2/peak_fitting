@@ -1,3 +1,4 @@
+# experiment_data
 # ├── raw_data
 # │   ├── heterodyne
 # │   │   ├── het_st80_1
@@ -32,16 +33,19 @@
 # │   │   ├── ucl_x_none.CSV
 # │   │   ├── ucl_y_none.CSV
 
+# TODO:  Refactor using pathlib
 import os
+import pathlib # HACK:  To make image directory sanely
 
-# Full path to the location of this file
-PREFIX = os.path.join(os.getcwd(), "experiment_data/")
 
+# Saved images directory located at the same level as this file
+IMAGE_DIRECTORY = pathlib.Path(__file__).joinpath("saved_images/") # HACK:  Example of how to update the rest of these paths
+# Experiment data directory located at the same level as this file
+EXPERIMENT_DATA = os.path.join(os.getcwd(), "experiment_data/")
 # Top level directory for all raw data
-RAW_DATA_DIR = os.path.join(PREFIX, "raw_data/")
-
+RAW_DATA_DIR = os.path.join(EXPERIMENT_DATA, "raw_data/")
 # Top level directory for files that have been processed
-CLEAN_DATA_DIR = os.path.join(PREFIX, "clean_data/")
+CLEAN_DATA_DIR = os.path.join(EXPERIMENT_DATA, "clean_data/")
 
 
 def _add_child_dirs(parent, children):
@@ -100,9 +104,12 @@ def _add_files(parent, filenames):
 def build_file_tree():
 
     """
-    Create a file tree for the pre- and post-processed experiment data.
+    Create a file tree for saved images and the pre-/post-processed experiment data.
     Initialize template files for post-processed data.
     """
+
+    # Create directory for saved images
+    os.makedirs(IMAGE_DIRECTORY)
 
     # Create directory for UCL fits
     _add_child_dirs(RAW_DATA_DIR, ["raw_ucl_fits"])
