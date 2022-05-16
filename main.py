@@ -149,7 +149,6 @@ def main():
     ready_all_ucl()
     ready_all_cst()
 
-    # TODO:  Add figure saving flag
     split_detection_comparisons = [('x', None), ('y', None)]
     heterodyne_comparisons = [('x', "positive"), ('x', "negative"), ('y', "positive"), ('y', "negative")]
 
