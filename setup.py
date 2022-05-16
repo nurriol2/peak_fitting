@@ -33,20 +33,27 @@
 # │   │   ├── ucl_x_none.CSV
 # │   │   ├── ucl_y_none.CSV
 
-# TODO:  Refactor using pathlib
 import os
-import pathlib # HACK:  To make image directory sanely
+import pathlib
 
+import logging 
+logging.basicConfig(level=logging.DEBUG, format="%(message)s")
 
+# Level of the setup.py script
+TOP_LEVEL = pathlib.Path(__file__).parent
+logging.debug(f"Top level directory path {TOP_LEVEL}")
 # Saved images directory located at the same level as this file
-IMAGE_DIRECTORY = pathlib.Path(__file__).parent.joinpath("saved_images/") # HACK:  Example of how to update the rest of these paths
+IMAGE_DIRECTORY = TOP_LEVEL.joinpath("saved_images/")
+logging.debug(f"IMAGES {IMAGE_DIRECTORY}")
 # Experiment data directory located at the same level as this file
-EXPERIMENT_DATA = os.path.join(os.getcwd(), "experiment_data/")
+EXPERIMENT_DATA = TOP_LEVEL.joinpath("experiment_data/")
+logging.debug(f"EXPERIMENT DATA DIRECTORY {EXPERIMENT_DATA}")
 # Top level directory for all raw data
-RAW_DATA_DIR = os.path.join(EXPERIMENT_DATA, "raw_data/")
+RAW_DATA_DIR = EXPERIMENT_DATA.joinpath("raw_data/")
+logging.debug(f"RAW DATA SUBDIRECTORY {RAW_DATA_DIR}")
 # Top level directory for files that have been processed
-CLEAN_DATA_DIR = os.path.join(EXPERIMENT_DATA, "clean_data/")
-
+CLEAN_DATA_DIR = EXPERIMENT_DATA.joinpath("clean_data/")
+logging.debug(f"CLEAN DATA SUBDIRECTORY {CLEAN_DATA_DIR}")
 
 def _add_child_dirs(parent, children):
 
