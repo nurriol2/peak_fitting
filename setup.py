@@ -36,24 +36,16 @@
 import os
 import pathlib
 
-import logging 
-logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-
 # Level of the setup.py script
 TOP_LEVEL = pathlib.Path(__file__).parent
-logging.debug(f"Top level directory path {TOP_LEVEL}")
 # Saved images directory located at the same level as this file
 IMAGE_DIRECTORY = TOP_LEVEL.joinpath("saved_images/")
-logging.debug(f"IMAGES {IMAGE_DIRECTORY}")
 # Experiment data directory located at the same level as this file
 EXPERIMENT_DATA = TOP_LEVEL.joinpath("experiment_data/")
-logging.debug(f"EXPERIMENT DATA DIRECTORY {EXPERIMENT_DATA}")
 # Top level directory for all raw data
 RAW_DATA_DIR = EXPERIMENT_DATA.joinpath("raw_data/")
-logging.debug(f"RAW DATA SUBDIRECTORY {RAW_DATA_DIR}")
 # Top level directory for files that have been processed
 CLEAN_DATA_DIR = EXPERIMENT_DATA.joinpath("clean_data/")
-logging.debug(f"CLEAN DATA SUBDIRECTORY {CLEAN_DATA_DIR}")
 
 def _add_child_dirs(parent, children):
 
@@ -97,13 +89,13 @@ def _add_files(parent, filenames):
         fullpath = os.path.join(parent, filename)
 
         # Attempt to create the file
-        # TODO:  Could this be better with a context manager?
         try:
             f = open(fullpath, 'w')
             f.write(header)
             f.close()
+        # Skipping existing files
         except FileExistsError:
-            print(f"{fullpath} already exists.")
+            print(f"Skipping {fullpath} already exists...")
 
     return  
 
@@ -119,7 +111,7 @@ def build_file_tree():
         # Create directory for saved images
         os.makedirs(IMAGE_DIRECTORY)
     except FileExistsError:
-        print(f"{IMAGE_DIRECTORY} already exists.")
+        print(f"Skipping {IMAGE_DIRECTORY} already exists...")
 
     # Create directory for UCL fits
     _add_child_dirs(RAW_DATA_DIR, ["raw_ucl_fits"])
